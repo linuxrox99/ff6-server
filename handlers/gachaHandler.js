@@ -281,7 +281,7 @@ function makeGachaApiSetForGroup(group) {
 
 function makeGachaApi6SetForGroup(group) {
   function mapPrize(item) {
-    return { type: item.type, data: item.car ? item.car : item.type, quantity: item.count || 1 };
+    return mapApi6Item(item.type, item.car, item.count || 1);
   }
 
   const baseGroup = String(group || 'base').toLowerCase();
@@ -357,6 +357,18 @@ function makeGachaApiGroupsForRefresh(groupsRaw) {
   }
   return out;
 }
+
+function mapApi6Item(type, car, count) {
+  if (type === 'sc') return { type: 'sc', data: 'coins', quantity: count };
+  if (type === 'hc') return car ? { type: 'car', data: car, quantity: count } : { type: 'hc', data: 'gold', quantity: count };
+  if (type === 'lc') return { type: 'car', data: car || '', quantity: count };
+  if (type === 'ct') return { type: 'ct', data: 'tokens', quantity: count };
+  if (type === 'fuel') return { type: 'fuel', data: 'fuel', quantity: count };
+  if (type === 'pu') return { type: 'pu', data: 'powerup_random', quantity: count };
+  if (type === 'vu') return { type: 'vu', data: 'vinyl_random', quantity: count };
+  return { type: type, data: car || type, quantity: count };
+}
+
 module.exports = function createGachaHandler(deps) {
   const StateManager = deps.StateManager;
   const handleCarsSave = deps.handleCarsSave;
@@ -526,7 +538,7 @@ module.exports = function createGachaHandler(deps) {
       StateManager.writeSave(state, naid);
       if (hardSpent) pushSyncToClients('WalletManager');
 
-      const item = { type: picked.type, data: picked.car ? picked.car : picked.type, quantity: picked.count };
+      const item = protocol === 'api6' ? mapApi6Item(picked.type, picked.car, picked.count) : { type: picked.type, data: picked.car ? picked.car : picked.type, quantity: picked.count };
       const result = { softToPay: payment === 'soft' ? table.softCost : 0, xpToGive: 1, items: [item] };
       if (payment === 'token') {
         const freeSpinToken = getFreeSpinTokenForTable(table.tableID);
