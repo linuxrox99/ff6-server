@@ -288,17 +288,14 @@ function makeGachaApi6SetForGroup(group) {
   const isEvents = baseGroup === 'events';
 
   const bonusBoxDefs = [
-    { name: 'box_0', token: 'gs_bronze', cost: 10, xp: 100, mult: 1, multtxt: 'x1', display: 'Steel Bonus Box', bg: 'ui_gacha/gacha_img_steel' },
-    { name: 'box_1', token: 'gs_silver', cost: 20, xp: 200, mult: 5, multtxt: 'x5', display: 'Bronze Bonus Box', bg: 'ui_gacha/gacha_img_bronze' },
-    { name: 'box_2', token: 'gs_gold', cost: 30, xp: 300, mult: 10, multtxt: 'x10', display: 'Silver Bonus Box', bg: 'ui_gacha/gacha_img_silver' },
-    { name: 'box_3', token: 'gs_platinum', cost: 50, xp: 500, mult: 25, multtxt: 'x25', display: 'Gold Bonus Box', bg: 'ui_gacha/gacha_img_gold' }
+    { name: 'box_steel', token: 'gs_steel', cost: 10, xp: 100, mult: 1, multtxt: 'x1', display: 'Steel Bonus Box', bg: 'ui_gacha/gacha_img_steel', open: 'ui_gacha/Gacha_Box_0' },
+    { name: 'box_bronze', token: 'gs_bronze', cost: 20, xp: 200, mult: 5, multtxt: 'x5', display: 'Bronze Bonus Box', bg: 'ui_gacha/gacha_img_bronze', open: 'ui_gacha/Gacha_Box_1' },
+    { name: 'box_silver', token: 'gs_silver', cost: 30, xp: 300, mult: 10, multtxt: 'x10', display: 'Silver Bonus Box', bg: 'ui_gacha/gacha_img_silver', open: 'ui_gacha/Gacha_Box_2' },
+    { name: 'box_gold', token: 'gs_gold', cost: 50, xp: 500, mult: 25, multtxt: 'x25', display: 'Gold Bonus Box', bg: 'ui_gacha/gacha_img_gold', open: 'ui_gacha/Gacha_Box_3' }
   ];
 
   const eventBoxDefs = [
-    { name: 'box_0', token: 'gs_bronze', cost: 0, xp: 100, mult: 1, multtxt: '', display: 'Event Box 1', bg: 'ui_gacha/gacha_img_event_1' },
-    { name: 'box_1', token: 'gs_silver', cost: 0, xp: 200, mult: 5, multtxt: '', display: 'Event Box 2', bg: 'ui_gacha/gacha_img_event_2' },
-    { name: 'box_2', token: 'gs_gold', cost: 0, xp: 300, mult: 10, multtxt: '', display: 'Event Box 3', bg: 'ui_gacha/gacha_img_event_3' },
-    { name: 'box_3', token: 'gs_platinum', cost: 0, xp: 500, mult: 25, multtxt: '', display: 'Event Box 4', bg: 'ui_gacha/gacha_img_event_4' }
+    { name: 'box_platinum', token: 'gs_platinum', cost: 0, xp: 500, mult: 25, multtxt: 'x25', display: 'Platinum Bonus Box', bg: 'ui_gacha/gacha_img_platinum', open: 'ui_gacha/Gacha_Box_3' }
   ];
 
   const defs = isEvents ? eventBoxDefs : bonusBoxDefs;
@@ -310,17 +307,17 @@ function makeGachaApi6SetForGroup(group) {
     end: isEvents ? Math.floor(Date.now() / 1000) + 86400 : -1,
     multiplier: d.mult,
     multtxt: d.multtxt,
-    possiblePrizes: GACHA_TABLES[Math.min(i, GACHA_TABLES.length - 1)].items.map(mapPrize),
+    possiblePrizes: GACHA_TABLES[Math.min(isEvents ? 3 : i, GACHA_TABLES.length - 1)].items.map(mapPrize),
     featured: [],
     displayname: d.display,
     bgs3: false,
     bg: d.bg,
     opens3: false,
-    openimg: 'ui_gacha/Gacha_Box_' + String(Math.min(i, 3)),
+    openimg: d.open,
     closeds3: false,
-    closedimg: 'ui_gacha/Gacha_Box_' + String(Math.min(i, 3)),
+    closedimg: d.open,
     tokenimgs3: false,
-    tokenimg: 'ui_gacha/' + d.token,
+    tokenimg: d.open,
     sc: { cost: 0, xp: d.xp },
     hc: { cost: d.cost, xp: d.xp },
     tokenc: { cost: 1, xp: d.xp }
@@ -488,7 +485,12 @@ module.exports = function createGachaHandler(deps) {
       const paymentRaw = String(params.payment || 'token').toLowerCase();
       const payment = paymentRaw === 'hc' ? 'hard' : (paymentRaw === 'sc' ? 'soft' : paymentRaw);
 
-      const tableID = parseInt(boxName.replace('box_', ''), 10);
+      let tableID = parseInt(boxName.replace('box_', ''), 10);
+      if (isNaN(tableID) && protocol === 'api6') {
+        const setForLookup = makeGachaApi6SetForGroup(group);
+        const idx = (setForLookup.boxes || []).findIndex(b => b && b.name === boxName);
+        if (idx >= 0) tableID = Math.min(group === 'events' ? 3 : idx, GACHA_TABLES.length - 1);
+      }
       const table = GACHA_TABLES.find(t => t.tableID === tableID);
       if (!table) return sendJson(res, getSparxErrorResponse('ID_SPARX_ERROR_UNKNOWN'));
 
