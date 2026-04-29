@@ -534,6 +534,11 @@ module.exports = function createGachaHandler(deps) {
 
       const item = protocol === 'api6' ? mapApi6Item(picked.type, picked.car, picked.count) : { type: picked.type, data: picked.car ? picked.car : picked.type, quantity: picked.count };
       const result = { softToPay: payment === 'soft' ? table.softCost : 0, xpToGive: 1, items: [item] };
+      if (protocol === 'api6') {
+        result.type = item.type;
+        result.data = item.data;
+        result.quantity = item.quantity;
+      }
       if (payment === 'token') {
         const freeSpinToken = getFreeSpinTokenForTable(table.tableID);
         result.balance = (StateManager.loadSave(naid).result.inventory || {})[freeSpinToken] || 0;
