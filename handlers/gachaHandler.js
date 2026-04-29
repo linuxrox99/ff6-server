@@ -281,30 +281,49 @@ function makeGachaApiSetForGroup(group) {
 
 function makeGachaApi6SetForGroup(group) {
   function mapPrize(item) {
-    return { type: item.type, data: item.car ? item.car : item.type };
+    return { type: item.type, data: item.car ? item.car : item.type, quantity: item.count || 1 };
   }
 
-  const boxes = GACHA_TABLES.map(t => ({
+  const baseGroup = String(group || 'base').toLowerCase();
+  const isEvents = baseGroup === 'events';
+
+  const bonusBoxDefs = [
+    { name: 'box_0', token: 'gs_bronze', cost: 10, xp: 100, mult: 1, multtxt: 'x1', display: 'Steel Bonus Box', bg: 'ui_gacha/gacha_img_steel' },
+    { name: 'box_1', token: 'gs_silver', cost: 20, xp: 200, mult: 5, multtxt: 'x5', display: 'Bronze Bonus Box', bg: 'ui_gacha/gacha_img_bronze' },
+    { name: 'box_2', token: 'gs_gold', cost: 30, xp: 300, mult: 10, multtxt: 'x10', display: 'Silver Bonus Box', bg: 'ui_gacha/gacha_img_silver' },
+    { name: 'box_3', token: 'gs_platinum', cost: 50, xp: 500, mult: 25, multtxt: 'x25', display: 'Gold Bonus Box', bg: 'ui_gacha/gacha_img_gold' }
+  ];
+
+  const eventBoxDefs = [
+    { name: 'box_0', token: 'gs_bronze', cost: 0, xp: 100, mult: 1, multtxt: '', display: 'Event Box 1', bg: 'ui_gacha/gacha_img_event_1' },
+    { name: 'box_1', token: 'gs_silver', cost: 0, xp: 200, mult: 5, multtxt: '', display: 'Event Box 2', bg: 'ui_gacha/gacha_img_event_2' },
+    { name: 'box_2', token: 'gs_gold', cost: 0, xp: 300, mult: 10, multtxt: '', display: 'Event Box 3', bg: 'ui_gacha/gacha_img_event_3' },
+    { name: 'box_3', token: 'gs_platinum', cost: 0, xp: 500, mult: 25, multtxt: '', display: 'Event Box 4', bg: 'ui_gacha/gacha_img_event_4' }
+  ];
+
+  const defs = isEvents ? eventBoxDefs : bonusBoxDefs;
+
+  const boxes = defs.map((d, i) => ({
     set: String(group || 'base') + '_set',
-    name: 'box_' + String(t.tableID),
-    token: getFreeSpinTokenForTable(t.tableID),
-    end: -1,
-    multiplier: t.multiplier,
-    multtxt: String(t.multiplier) + 'x',
-    possiblePrizes: t.items.map(mapPrize),
+    name: d.name,
+    token: d.token,
+    end: isEvents ? Math.floor(Date.now() / 1000) + 86400 : -1,
+    multiplier: d.mult,
+    multtxt: d.multtxt,
+    possiblePrizes: GACHA_TABLES[Math.min(i, GACHA_TABLES.length - 1)].items.map(mapPrize),
     featured: [],
-    displayname: 'Gacha Box ' + String(t.tableID + 1),
+    displayname: d.display,
     bgs3: false,
-    bg: 'ui_gacha/Gacha_Box_' + String(t.tableID),
+    bg: d.bg,
     opens3: false,
-    openimg: 'ui_gacha/Gacha_Box_' + String(t.tableID),
+    openimg: 'ui_gacha/Gacha_Box_' + String(Math.min(i, 3)),
     closeds3: false,
-    closedimg: 'ui_gacha/Gacha_Box_' + String(t.tableID),
+    closedimg: 'ui_gacha/Gacha_Box_' + String(Math.min(i, 3)),
     tokenimgs3: false,
-    tokenimg: 'ui_gacha/' + getFreeSpinTokenForTable(t.tableID),
-    sc: { cost: t.softCost, xp: 1 },
-    hc: { cost: t.hardCost, xp: 1 },
-    tokenc: { cost: 1, xp: 1 }
+    tokenimg: 'ui_gacha/' + d.token,
+    sc: { cost: 0, xp: d.xp },
+    hc: { cost: d.cost, xp: d.xp },
+    tokenc: { cost: 1, xp: d.xp }
   }));
 
   const possiblePrizes = [];
