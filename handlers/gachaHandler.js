@@ -327,7 +327,18 @@ function makeGachaApiGroupsForRefresh(groupsRaw) {
   const groups = String(groupsRaw || 'base').split(',').map(s => s.trim()).filter(Boolean);
   const list = groups.length ? groups : ['base'];
   const out = [];
-  for (let i = 0; i < list.length; i++) out.push({ group: list[i], set: makeGachaApi6SetForGroup(list[i]) });
+  const seen = {};
+  for (let i = 0; i < list.length; i++) {
+    const groupName = list[i];
+    const set = makeGachaApi6SetForGroup(groupName);
+    const aliases = [groupName, set.name];
+    for (let j = 0; j < aliases.length; j++) {
+      const key = aliases[j];
+      if (!key || seen[key]) continue;
+      seen[key] = true;
+      out.push({ group: key, set: set });
+    }
+  }
   return out;
 }
 module.exports = function createGachaHandler(deps) {
