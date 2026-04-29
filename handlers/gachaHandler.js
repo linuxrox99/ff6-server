@@ -203,6 +203,7 @@ function resolveGachaProtocol(req, body, profile) {
   const apiVersion = parseInt(String(params.api || 0), 10) || 0;
   if (apiVersion === 3) return 'api3';
   if (apiVersion === 5) return 'api5';
+  if (apiVersion === 6) return 'api6';
   if (isGachaApi3Build(profile)) return 'api3';
   if (isGachaApi5Build(profile)) return 'api5';
   if (isOldGachaBuild(profile)) return 'old';
@@ -276,6 +277,90 @@ function makeGachaApiSetForGroup(group) {
     possiblePrizes: possiblePrizes,
     boxes: boxes
   };
+}
+
+function makeGachaApi6SetForGroup(group) {
+  function mapPrize(item) {
+    return mapApi6Item(item.type, item.car, item.count || 1);
+  }
+
+  const baseGroup = String(group || 'base').toLowerCase();
+  const isEvents = baseGroup === 'events';
+
+  const bonusBoxDefs = [
+    { name: 'box_steel', token: 'gs_steel', cost: 10, xp: 100, mult: 1, multtxt: 'x1', display: 'Steel Bonus Box', bg: 'ui_gacha/gacha_img_black', open: 'ui_gacha/Gacha_Box_opened_0', closed: 'ui_gacha/Gacha_Box_0' },
+    { name: 'box_bronze', token: 'gs_bronze', cost: 20, xp: 200, mult: 5, multtxt: 'x5', display: 'Bronze Bonus Box', bg: 'ui_gacha/gacha_img_bronze', open: 'ui_gacha/Gacha_Box_opened_1', closed: 'ui_gacha/Gacha_Box_1' },
+    { name: 'box_silver', token: 'gs_silver', cost: 30, xp: 300, mult: 10, multtxt: 'x10', display: 'Silver Bonus Box', bg: 'ui_gacha/gacha_img_silver', open: 'ui_gacha/Gacha_Box_opened_2', closed: 'ui_gacha/Gacha_Box_2' },
+    { name: 'box_gold', token: 'gs_gold', cost: 50, xp: 500, mult: 25, multtxt: 'x25', display: 'Gold Bonus Box', bg: 'ui_gacha/gacha_img_gold', open: 'ui_gacha/Gacha_Box_opened_3', closed: 'ui_gacha/Gacha_Box_3' }
+  ];
+
+  const eventBoxDefs = [
+    { name: 'box_platinum', token: 'gs_platinum', cost: 0, xp: 500, mult: 25, multtxt: 'x25', display: 'Platinum Bonus Box', bg: 'ui_gacha/gacha_img_platinum', open: 'ui_gacha/Gacha_Box_opened_3', closed: 'ui_gacha/Gacha_Box_3' }
+  ];
+
+  const defs = isEvents ? eventBoxDefs : bonusBoxDefs;
+
+  const boxes = defs.map((d, i) => ({
+    set: isEvents ? 'events' : (String(group || 'base') + '_set'),
+    name: d.name,
+    token: d.token,
+    end: isEvents ? Math.floor(Date.now() / 1000) + 86400 : -1,
+    multiplier: d.mult,
+    multtxt: d.multtxt,
+    possiblePrizes: GACHA_TABLES[Math.min(isEvents ? 3 : i, GACHA_TABLES.length - 1)].items.map(mapPrize),
+    featured: [],
+    displayname: d.display,
+    bgs3: false,
+    bg: d.bg,
+    opens3: false,
+    openimg: d.open,
+    closeds3: false,
+    closedimg: d.closed,
+    tokenimgs3: false,
+    tokenimg: d.open,
+    sc: { cost: 0, xp: d.xp },
+    hc: { cost: d.cost, xp: d.xp },
+    tokenc: { cost: 1, xp: d.xp }
+  }));
+
+  const possiblePrizes = [];
+  for (let i = 0; i < GACHA_TABLES.length; i++) {
+    for (let j = 0; j < GACHA_TABLES[i].items.length; j++) {
+      possiblePrizes.push(mapPrize(GACHA_TABLES[i].items[j]));
+    }
+  }
+
+  return {
+    version: '1',
+    name: String(group || 'base') + '_set',
+    attracts: REWARD_CARS_2X.map(r => 'ui_thumbnails/' + r.car),
+    possiblePrizes: possiblePrizes,
+    boxes: boxes
+  };
+}
+
+function makeGachaApiGroupsForRefresh(groupsRaw) {
+  const groups = String(groupsRaw || '').split(',').map(s => s.trim()).filter(Boolean);
+  const list = groups.length ? groups : ['base', 'trials', 'racewars', 'tutorial', 'events'];
+  const out = [];
+  const seen = {};
+  for (let i = 0; i < list.length; i++) {
+    const groupName = list[i];
+    const set = makeGachaApi6SetForGroup(groupName);
+    const keys = [groupName, set.name];
+    for (let j = 0; j < keys.length; j++) {
+      const key = keys[j];
+      if (!key || seen[key]) continue;
+      seen[key] = true;
+      out.push({ group: key, set: set });
+    }
+  }
+  return out;
+}
+
+function mapApi6Item(type, car, count) {
+  if ((type === 'lc' || type === 'hc') && car) return { type: 'car', data: car, quantity: count };
+  return { type: type, data: type, quantity: count };
 }
 
 module.exports = function createGachaHandler(deps) {
@@ -361,7 +446,7 @@ module.exports = function createGachaHandler(deps) {
       const profile = StateManager.getProfile ? StateManager.getProfile(naid) : null;
       const protocol = resolveGachaProtocol(req, body, profile);
       if (protocol === 'api3') return handlePickApi3(req, res, body, naid);
-      if (protocol === 'api5') return handlePickApi5(req, res, body, naid);
+      if (protocol === 'api5' || protocol === 'api6') return handlePickApi5(req, res, body, naid, protocol);
 
       const tableID = parseInt(params.gachaTableID !== undefined ? params.gachaTableID : 0, 10);
       const softPaid = parseInt(params.softPaid || 0, 10);
@@ -394,7 +479,7 @@ module.exports = function createGachaHandler(deps) {
     }
   }
 
-  function handlePickApi5(req, res, body, naid) {
+  function handlePickApi5(req, res, body, naid, protocol) {
     try {
       const parsedUrl = parseRequestUrl(req);
       const params = parseBodyObject(body, parsedUrl);
@@ -406,11 +491,16 @@ module.exports = function createGachaHandler(deps) {
       const paymentRaw = String(params.payment || 'token').toLowerCase();
       const payment = paymentRaw === 'hc' ? 'hard' : (paymentRaw === 'sc' ? 'soft' : paymentRaw);
 
-      const tableID = parseInt(boxName.replace('box_', ''), 10);
+      let tableID = parseInt(boxName.replace('box_', ''), 10);
+      if (isNaN(tableID) && protocol === 'api6') {
+        const setForLookup = makeGachaApi6SetForGroup(group);
+        const idx = (setForLookup.boxes || []).findIndex(b => b && b.name === boxName);
+        if (idx >= 0) tableID = Math.min(group === 'events' ? 3 : idx, GACHA_TABLES.length - 1);
+      }
       const table = GACHA_TABLES.find(t => t.tableID === tableID);
       if (!table) return sendJson(res, getSparxErrorResponse('ID_SPARX_ERROR_UNKNOWN'));
 
-      const expectedSet = makeGachaApiSetForGroup(group);
+      const expectedSet = protocol === 'api6' ? makeGachaApi6SetForGroup(group) : makeGachaApiSetForGroup(group);
       if (version !== expectedSet.version || setName !== expectedSet.name) return sendJson(res, getSparxErrorResponse('ID_SPARX_ERROR_UNKNOWN'));
 
       const state = StateManager.loadSave(naid);
@@ -442,8 +532,13 @@ module.exports = function createGachaHandler(deps) {
       StateManager.writeSave(state, naid);
       if (hardSpent) pushSyncToClients('WalletManager');
 
-      const item = { type: picked.type, data: picked.car ? picked.car : picked.type, quantity: picked.count };
+      const item = protocol === 'api6' ? mapApi6Item(picked.type, picked.car, picked.count) : { type: picked.type, data: picked.car ? picked.car : picked.type, quantity: picked.count };
       const result = { softToPay: payment === 'soft' ? table.softCost : 0, xpToGive: 1, items: [item] };
+      if (protocol === 'api6') {
+        result.type = item.type;
+        result.data = item.data;
+        result.quantity = item.quantity;
+      }
       if (payment === 'token') {
         const freeSpinToken = getFreeSpinTokenForTable(table.tableID);
         result.balance = (StateManager.loadSave(naid).result.inventory || {})[freeSpinToken] || 0;
@@ -476,7 +571,7 @@ module.exports = function createGachaHandler(deps) {
       const table = GACHA_TABLES.find(t => t.tableID === tableID);
       if (!table) return sendJson(res, getSparxErrorResponse('ID_SPARX_ERROR_UNKNOWN'));
 
-      const expectedSet = makeGachaApiSetForGroup(group);
+      const expectedSet = protocol === 'api6' ? makeGachaApi6SetForGroup(group) : makeGachaApiSetForGroup(group);
       if (version !== expectedSet.version || setName !== expectedSet.name) return sendJson(res, getSparxErrorResponse('ID_SPARX_ERROR_UNKNOWN'));
 
       const state = StateManager.loadSave(naid);
@@ -533,7 +628,7 @@ module.exports = function createGachaHandler(deps) {
 
   function handleGetSetApi5(req, res, parsedUrl) {
     try {
-      const groupsRaw = parsedUrl && parsedUrl.query && parsedUrl.query.groups ? String(parsedUrl.query.groups) : 'base';
+      const groupsRaw = parsedUrl && parsedUrl.query && parsedUrl.query.groups ? String(parsedUrl.query.groups) : '';
       const groups = groupsRaw.split(',').map(s => s.trim()).filter(Boolean);
       const result = {};
       const list = groups.length ? groups : ['base'];
@@ -613,6 +708,10 @@ module.exports = function createGachaHandler(deps) {
     const naid = resolveNaid(req, StateManager);
     const profile = StateManager.getProfile ? StateManager.getProfile(naid) : null;
     const protocol = resolveGachaProtocol(req, body, profile);
+    if (pathname === '/gacha/refresh' && protocol === 'api6') {
+      const groupsRaw = parsedUrl && parsedUrl.query && parsedUrl.query.groups ? String(parsedUrl.query.groups) : '';
+      return sendJson(res, { result: { groups: makeGachaApiGroupsForRefresh(groupsRaw), check: 'uhtotallysecure' }, ts: Math.floor(Date.now() / 1000) });
+    }
     if (pathname === '/gacha/getSet') {
       if (protocol === 'api3') return handleGetSetApi3(req, res, parsedUrl);
       if (protocol !== 'api5') return sendJson(res, { result: {}, ts: Math.floor(Date.now() / 1000) });
@@ -630,7 +729,7 @@ module.exports = function createGachaHandler(deps) {
       ];
       return sendJson(res, { result: result, ts: Math.floor(Date.now() / 1000) });
     }
-    if (pathname === '/gacha/getTokens' && protocol === 'api5') {
+    if (pathname === '/gacha/getTokens' && (protocol === 'api5' || protocol === 'api6')) {
       const state = StateManager.loadSave(naid);
       const inventory = state && state.result && state.result.inventory ? state.result.inventory : {};
       const result = [
