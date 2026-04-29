@@ -596,7 +596,7 @@ module.exports = function createGachaHandler(deps) {
 
   function handleGetSetApi5(req, res, parsedUrl) {
     try {
-      const groupsRaw = parsedUrl && parsedUrl.query && parsedUrl.query.groups ? String(parsedUrl.query.groups) : 'base';
+      const groupsRaw = parsedUrl && parsedUrl.query && parsedUrl.query.groups ? String(parsedUrl.query.groups) : '';
       const groups = groupsRaw.split(',').map(s => s.trim()).filter(Boolean);
       const result = {};
       const list = groups.length ? groups : ['base'];
@@ -677,7 +677,7 @@ module.exports = function createGachaHandler(deps) {
     const profile = StateManager.getProfile ? StateManager.getProfile(naid) : null;
     const protocol = resolveGachaProtocol(req, body, profile);
     if (pathname === '/gacha/refresh' && protocol === 'api6') {
-      const groupsRaw = parsedUrl && parsedUrl.query && parsedUrl.query.groups ? String(parsedUrl.query.groups) : 'base';
+      const groupsRaw = parsedUrl && parsedUrl.query && parsedUrl.query.groups ? String(parsedUrl.query.groups) : '';
       return sendJson(res, { result: { groups: makeGachaApiGroupsForRefresh(groupsRaw), check: 'uhtotallysecure' }, ts: Math.floor(Date.now() / 1000) });
     }
     if (pathname === '/gacha/getSet') {
