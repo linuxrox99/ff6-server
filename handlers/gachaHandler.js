@@ -253,11 +253,23 @@ function makeGachaApiSetForGroup(group) {
   }
 
   const boxes = GACHA_TABLES.map(t => ({
+    set: String(group || 'base') + '_set',
     name: 'box_' + String(t.tableID),
     token: getFreeSpinTokenForTable(t.tableID),
-    image: 'ui_gacha/Gacha_Box_' + String(t.tableID),
+    end: -1,
     multiplier: t.multiplier,
+    multtxt: String(t.multiplier) + 'x',
     possiblePrizes: t.items.map(mapPrize),
+    featured: [],
+    displayname: 'Gacha Box ' + String(t.tableID + 1),
+    bgs3: false,
+    bg: 'ui_gacha/Gacha_Box_' + String(t.tableID),
+    opens3: false,
+    openimg: 'ui_gacha/Gacha_Box_' + String(t.tableID),
+    closeds3: false,
+    closedimg: 'ui_gacha/Gacha_Box_' + String(t.tableID),
+    tokenimgs3: false,
+    tokenimg: 'ui_gacha/' + getFreeSpinTokenForTable(t.tableID),
     sc: { cost: t.softCost, xp: 1 },
     hc: { cost: t.hardCost, xp: 1 },
     tokenc: { cost: 1, xp: 1 }
