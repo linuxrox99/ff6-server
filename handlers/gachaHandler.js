@@ -253,6 +253,38 @@ function makeGachaApiSetForGroup(group) {
   }
 
   const boxes = GACHA_TABLES.map(t => ({
+    name: 'box_' + String(t.tableID),
+    token: getFreeSpinTokenForTable(t.tableID),
+    image: 'ui_gacha/Gacha_Box_' + String(t.tableID),
+    multiplier: t.multiplier,
+    possiblePrizes: t.items.map(mapPrize),
+    sc: { cost: t.softCost, xp: 1 },
+    hc: { cost: t.hardCost, xp: 1 },
+    tokenc: { cost: 1, xp: 1 }
+  }));
+
+  const possiblePrizes = [];
+  for (let i = 0; i < GACHA_TABLES.length; i++) {
+    for (let j = 0; j < GACHA_TABLES[i].items.length; j++) {
+      possiblePrizes.push(mapPrize(GACHA_TABLES[i].items[j]));
+    }
+  }
+
+  return {
+    version: '1',
+    name: String(group || 'base') + '_set',
+    attracts: REWARD_CARS_2X.map(r => 'ui_thumbnails/' + r.car),
+    possiblePrizes: possiblePrizes,
+    boxes: boxes
+  };
+}
+
+function makeGachaApi6SetForGroup(group) {
+  function mapPrize(item) {
+    return { type: item.type, data: item.car ? item.car : item.type };
+  }
+
+  const boxes = GACHA_TABLES.map(t => ({
     set: String(group || 'base') + '_set',
     name: 'box_' + String(t.tableID),
     token: getFreeSpinTokenForTable(t.tableID),
@@ -291,13 +323,11 @@ function makeGachaApiSetForGroup(group) {
   };
 }
 
-
-
 function makeGachaApiGroupsForRefresh(groupsRaw) {
   const groups = String(groupsRaw || 'base').split(',').map(s => s.trim()).filter(Boolean);
   const list = groups.length ? groups : ['base'];
   const out = [];
-  for (let i = 0; i < list.length; i++) out.push({ group: list[i], set: makeGachaApiSetForGroup(list[i]) });
+  for (let i = 0; i < list.length; i++) out.push({ group: list[i], set: makeGachaApi6SetForGroup(list[i]) });
   return out;
 }
 module.exports = function createGachaHandler(deps) {
@@ -383,7 +413,7 @@ module.exports = function createGachaHandler(deps) {
       const profile = StateManager.getProfile ? StateManager.getProfile(naid) : null;
       const protocol = resolveGachaProtocol(req, body, profile);
       if (protocol === 'api3') return handlePickApi3(req, res, body, naid);
-      if (protocol === 'api5' || protocol === 'api6') return handlePickApi5(req, res, body, naid);
+      if (protocol === 'api5' || protocol === 'api6') return handlePickApi5(req, res, body, naid, protocol);
 
       const tableID = parseInt(params.gachaTableID !== undefined ? params.gachaTableID : 0, 10);
       const softPaid = parseInt(params.softPaid || 0, 10);
@@ -416,7 +446,7 @@ module.exports = function createGachaHandler(deps) {
     }
   }
 
-  function handlePickApi5(req, res, body, naid) {
+  function handlePickApi5(req, res, body, naid, protocol) {
     try {
       const parsedUrl = parseRequestUrl(req);
       const params = parseBodyObject(body, parsedUrl);
@@ -432,7 +462,7 @@ module.exports = function createGachaHandler(deps) {
       const table = GACHA_TABLES.find(t => t.tableID === tableID);
       if (!table) return sendJson(res, getSparxErrorResponse('ID_SPARX_ERROR_UNKNOWN'));
 
-      const expectedSet = makeGachaApiSetForGroup(group);
+      const expectedSet = protocol === 'api6' ? makeGachaApi6SetForGroup(group) : makeGachaApiSetForGroup(group);
       if (version !== expectedSet.version || setName !== expectedSet.name) return sendJson(res, getSparxErrorResponse('ID_SPARX_ERROR_UNKNOWN'));
 
       const state = StateManager.loadSave(naid);
@@ -498,7 +528,7 @@ module.exports = function createGachaHandler(deps) {
       const table = GACHA_TABLES.find(t => t.tableID === tableID);
       if (!table) return sendJson(res, getSparxErrorResponse('ID_SPARX_ERROR_UNKNOWN'));
 
-      const expectedSet = makeGachaApiSetForGroup(group);
+      const expectedSet = protocol === 'api6' ? makeGachaApi6SetForGroup(group) : makeGachaApiSetForGroup(group);
       if (version !== expectedSet.version || setName !== expectedSet.name) return sendJson(res, getSparxErrorResponse('ID_SPARX_ERROR_UNKNOWN'));
 
       const state = StateManager.loadSave(naid);
