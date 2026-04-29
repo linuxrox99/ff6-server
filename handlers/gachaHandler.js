@@ -324,8 +324,8 @@ function makeGachaApi6SetForGroup(group) {
 }
 
 function makeGachaApiGroupsForRefresh(groupsRaw) {
-  const groups = String(groupsRaw || 'base').split(',').map(s => s.trim()).filter(Boolean);
-  const list = groups.length ? groups : ['base'];
+  const groups = String(groupsRaw || '').split(',').map(s => s.trim()).filter(Boolean);
+  const list = groups.length ? groups : ['base', 'trials', 'racewars', 'tutorial', 'events'];
   const out = [];
   const seen = {};
   for (let i = 0; i < list.length; i++) {
@@ -697,7 +697,7 @@ module.exports = function createGachaHandler(deps) {
       ];
       return sendJson(res, { result: result, ts: Math.floor(Date.now() / 1000) });
     }
-    if (pathname === '/gacha/getTokens' && protocol === 'api5') {
+    if (pathname === '/gacha/getTokens' && (protocol === 'api5' || protocol === 'api6')) {
       const state = StateManager.loadSave(naid);
       const inventory = state && state.result && state.result.inventory ? state.result.inventory : {};
       const result = [
