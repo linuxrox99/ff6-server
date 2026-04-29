@@ -288,20 +288,20 @@ function makeGachaApi6SetForGroup(group) {
   const isEvents = baseGroup === 'events';
 
   const bonusBoxDefs = [
-    { name: 'box_steel', token: 'gs_steel', cost: 10, xp: 100, mult: 1, multtxt: 'x1', display: 'Steel Bonus Box', bg: 'ui_gacha/gacha_img_black', open: 'ui_gacha/Gacha_Box_0_open' },
-    { name: 'box_bronze', token: 'gs_bronze', cost: 20, xp: 200, mult: 5, multtxt: 'x5', display: 'Bronze Bonus Box', bg: 'ui_gacha/gacha_img_bronze', open: 'ui_gacha/Gacha_Box_1_open' },
-    { name: 'box_silver', token: 'gs_silver', cost: 30, xp: 300, mult: 10, multtxt: 'x10', display: 'Silver Bonus Box', bg: 'ui_gacha/gacha_img_silver', open: 'ui_gacha/Gacha_Box_2_open' },
-    { name: 'box_gold', token: 'gs_gold', cost: 50, xp: 500, mult: 25, multtxt: 'x25', display: 'Gold Bonus Box', bg: 'ui_gacha/gacha_img_gold', open: 'ui_gacha/Gacha_Box_3_open' }
+    { name: 'box_steel', token: 'gs_steel', cost: 10, xp: 100, mult: 1, multtxt: 'x1', display: 'Steel Bonus Box', bg: 'ui_gacha/gacha_img_black', open: 'ui_gacha/Gacha_Box_opened_0' },
+    { name: 'box_bronze', token: 'gs_bronze', cost: 20, xp: 200, mult: 5, multtxt: 'x5', display: 'Bronze Bonus Box', bg: 'ui_gacha/gacha_img_bronze', open: 'ui_gacha/Gacha_Box_opened_1' },
+    { name: 'box_silver', token: 'gs_silver', cost: 30, xp: 300, mult: 10, multtxt: 'x10', display: 'Silver Bonus Box', bg: 'ui_gacha/gacha_img_silver', open: 'ui_gacha/Gacha_Box_opened_2' },
+    { name: 'box_gold', token: 'gs_gold', cost: 50, xp: 500, mult: 25, multtxt: 'x25', display: 'Gold Bonus Box', bg: 'ui_gacha/gacha_img_gold', open: 'ui_gacha/Gacha_Box_opened_3' }
   ];
 
   const eventBoxDefs = [
-    { name: 'box_platinum', token: 'gs_platinum', cost: 0, xp: 500, mult: 25, multtxt: 'x25', display: 'Platinum Bonus Box', bg: 'ui_gacha/gacha_img_platinum', open: 'ui_gacha/Gacha_Box_3_open' }
+    { name: 'box_platinum', token: 'gs_platinum', cost: 0, xp: 500, mult: 25, multtxt: 'x25', display: 'Platinum Bonus Box', bg: 'ui_gacha/gacha_img_platinum', open: 'ui_gacha/Gacha_Box_opened_3' }
   ];
 
   const defs = isEvents ? eventBoxDefs : bonusBoxDefs;
 
   const boxes = defs.map((d, i) => ({
-    set: String(group || 'base') + '_set',
+    set: isEvents ? 'events' : (String(group || 'base') + '_set'),
     name: d.name,
     token: d.token,
     end: isEvents ? Math.floor(Date.now() / 1000) + 86400 : -1,
