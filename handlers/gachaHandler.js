@@ -288,14 +288,14 @@ function makeGachaApi6SetForGroup(group) {
   const isEvents = baseGroup === 'events';
 
   const bonusBoxDefs = [
-    { name: 'box_steel', token: 'gs_steel', cost: 10, xp: 100, mult: 1, multtxt: 'x1', display: 'Steel Bonus Box', bg: 'ui_gacha/gacha_img_black', open: 'ui_gacha/Gacha_Box_opened_0' },
-    { name: 'box_bronze', token: 'gs_bronze', cost: 20, xp: 200, mult: 5, multtxt: 'x5', display: 'Bronze Bonus Box', bg: 'ui_gacha/gacha_img_bronze', open: 'ui_gacha/Gacha_Box_opened_1' },
-    { name: 'box_silver', token: 'gs_silver', cost: 30, xp: 300, mult: 10, multtxt: 'x10', display: 'Silver Bonus Box', bg: 'ui_gacha/gacha_img_silver', open: 'ui_gacha/Gacha_Box_opened_2' },
-    { name: 'box_gold', token: 'gs_gold', cost: 50, xp: 500, mult: 25, multtxt: 'x25', display: 'Gold Bonus Box', bg: 'ui_gacha/gacha_img_gold', open: 'ui_gacha/Gacha_Box_opened_3' }
+    { name: 'box_steel', token: 'gs_steel', cost: 10, xp: 100, mult: 1, multtxt: 'x1', display: 'Steel Bonus Box', bg: 'ui_gacha/gacha_img_black', open: 'ui_gacha/Gacha_Box_opened_0', closed: 'ui_gacha/Gacha_Box_0' },
+    { name: 'box_bronze', token: 'gs_bronze', cost: 20, xp: 200, mult: 5, multtxt: 'x5', display: 'Bronze Bonus Box', bg: 'ui_gacha/gacha_img_bronze', open: 'ui_gacha/Gacha_Box_opened_1', closed: 'ui_gacha/Gacha_Box_1' },
+    { name: 'box_silver', token: 'gs_silver', cost: 30, xp: 300, mult: 10, multtxt: 'x10', display: 'Silver Bonus Box', bg: 'ui_gacha/gacha_img_silver', open: 'ui_gacha/Gacha_Box_opened_2', closed: 'ui_gacha/Gacha_Box_2' },
+    { name: 'box_gold', token: 'gs_gold', cost: 50, xp: 500, mult: 25, multtxt: 'x25', display: 'Gold Bonus Box', bg: 'ui_gacha/gacha_img_gold', open: 'ui_gacha/Gacha_Box_opened_3', closed: 'ui_gacha/Gacha_Box_3' }
   ];
 
   const eventBoxDefs = [
-    { name: 'box_platinum', token: 'gs_platinum', cost: 0, xp: 500, mult: 25, multtxt: 'x25', display: 'Platinum Bonus Box', bg: 'ui_gacha/gacha_img_platinum', open: 'ui_gacha/Gacha_Box_opened_3' }
+    { name: 'box_platinum', token: 'gs_platinum', cost: 0, xp: 500, mult: 25, multtxt: 'x25', display: 'Platinum Bonus Box', bg: 'ui_gacha/gacha_img_platinum', open: 'ui_gacha/Gacha_Box_opened_3', closed: 'ui_gacha/Gacha_Box_3' }
   ];
 
   const defs = isEvents ? eventBoxDefs : bonusBoxDefs;
@@ -315,7 +315,7 @@ function makeGachaApi6SetForGroup(group) {
     opens3: false,
     openimg: d.open,
     closeds3: false,
-    closedimg: d.open.replace('_open', ''),
+    closedimg: d.closed,
     tokenimgs3: false,
     tokenimg: d.open,
     sc: { cost: 0, xp: d.xp },
