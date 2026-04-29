@@ -203,6 +203,7 @@ function resolveGachaProtocol(req, body, profile) {
   const apiVersion = parseInt(String(params.api || 0), 10) || 0;
   if (apiVersion === 3) return 'api3';
   if (apiVersion === 5) return 'api5';
+  if (apiVersion === 6) return 'api6';
   if (isGachaApi3Build(profile)) return 'api3';
   if (isGachaApi5Build(profile)) return 'api5';
   if (isOldGachaBuild(profile)) return 'old';
@@ -278,6 +279,15 @@ function makeGachaApiSetForGroup(group) {
   };
 }
 
+
+
+function makeGachaApiGroupsForRefresh(groupsRaw) {
+  const groups = String(groupsRaw || 'base').split(',').map(s => s.trim()).filter(Boolean);
+  const list = groups.length ? groups : ['base'];
+  const out = [];
+  for (let i = 0; i < list.length; i++) out.push({ group: list[i], set: makeGachaApiSetForGroup(list[i]) });
+  return out;
+}
 module.exports = function createGachaHandler(deps) {
   const StateManager = deps.StateManager;
   const handleCarsSave = deps.handleCarsSave;
@@ -361,7 +371,7 @@ module.exports = function createGachaHandler(deps) {
       const profile = StateManager.getProfile ? StateManager.getProfile(naid) : null;
       const protocol = resolveGachaProtocol(req, body, profile);
       if (protocol === 'api3') return handlePickApi3(req, res, body, naid);
-      if (protocol === 'api5') return handlePickApi5(req, res, body, naid);
+      if (protocol === 'api5' || protocol === 'api6') return handlePickApi5(req, res, body, naid);
 
       const tableID = parseInt(params.gachaTableID !== undefined ? params.gachaTableID : 0, 10);
       const softPaid = parseInt(params.softPaid || 0, 10);
@@ -613,6 +623,10 @@ module.exports = function createGachaHandler(deps) {
     const naid = resolveNaid(req, StateManager);
     const profile = StateManager.getProfile ? StateManager.getProfile(naid) : null;
     const protocol = resolveGachaProtocol(req, body, profile);
+    if (pathname === '/gacha/refresh' && protocol === 'api6') {
+      const groupsRaw = parsedUrl && parsedUrl.query && parsedUrl.query.groups ? String(parsedUrl.query.groups) : 'base';
+      return sendJson(res, { result: { groups: makeGachaApiGroupsForRefresh(groupsRaw), checkHash: '' }, ts: Math.floor(Date.now() / 1000) });
+    }
     if (pathname === '/gacha/getSet') {
       if (protocol === 'api3') return handleGetSetApi3(req, res, parsedUrl);
       if (protocol !== 'api5') return sendJson(res, { result: {}, ts: Math.floor(Date.now() / 1000) });

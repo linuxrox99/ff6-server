@@ -302,6 +302,7 @@ const routes = [
   { path: '/currency/debit', handler: (req, res, body, parsedUrl, pathname) => walletHandlers.handleCurrency(req, res, body, pathname) },
   { path: '/currency/credit', handler: (req, res, body, parsedUrl, pathname) => walletHandlers.handleCurrency(req, res, body, pathname) },
   { path: '/gacha/getTokens', handler: (req, res, body, parsedUrl, pathname) => handleGacha(req, res, body, parsedUrl, pathname) },
+  { path: '/gacha/refresh', handler: (req, res, body, parsedUrl, pathname) => handleGacha(req, res, body, parsedUrl, pathname) },
   { path: '/gacha/getSet', handler: (req, res, body, parsedUrl, pathname) => handleGacha(req, res, body, parsedUrl, pathname) },
   { path: '/gacha/getRewardCars', handler: (req, res, body, parsedUrl, pathname) => handleGacha(req, res, body, parsedUrl, pathname) },
   { path: '/gacha/getTables', handler: (req, res, body, parsedUrl, pathname) => handleGacha(req, res, body, parsedUrl, pathname) },
