@@ -359,14 +359,8 @@ function makeGachaApiGroupsForRefresh(groupsRaw) {
 }
 
 function mapApi6Item(type, car, count) {
-  if (type === 'sc') return { type: 'sc', data: 'coins', quantity: count };
-  if (type === 'hc') return car ? { type: 'car', data: car, quantity: count } : { type: 'hc', data: 'gold', quantity: count };
-  if (type === 'lc') return { type: 'car', data: car || '', quantity: count };
-  if (type === 'ct') return { type: 'ct', data: 'tokens', quantity: count };
-  if (type === 'fuel') return { type: 'fuel', data: 'fuel', quantity: count };
-  if (type === 'pu') return { type: 'pu', data: 'powerup_random', quantity: count };
-  if (type === 'vu') return { type: 'vu', data: 'vinyl_random', quantity: count };
-  return { type: type, data: car || type, quantity: count };
+  if ((type === 'lc' || type === 'hc') && car) return { type: 'car', data: car, quantity: count };
+  return { type: type, data: type, quantity: count };
 }
 
 module.exports = function createGachaHandler(deps) {
