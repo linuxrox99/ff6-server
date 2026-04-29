@@ -327,18 +327,7 @@ function makeGachaApiGroupsForRefresh(groupsRaw) {
   const groups = String(groupsRaw || 'base').split(',').map(s => s.trim()).filter(Boolean);
   const list = groups.length ? groups : ['base'];
   const out = [];
-  const seen = {};
-  for (let i = 0; i < list.length; i++) {
-    const groupName = list[i];
-    const set = makeGachaApi6SetForGroup(groupName);
-    const aliases = [groupName, set.name];
-    for (let j = 0; j < aliases.length; j++) {
-      const key = aliases[j];
-      if (!key || seen[key]) continue;
-      seen[key] = true;
-      out.push({ group: key, set: set });
-    }
-  }
+  for (let i = 0; i < list.length; i++) out.push({ group: list[i], set: makeGachaApi6SetForGroup(list[i]) });
   return out;
 }
 module.exports = function createGachaHandler(deps) {
@@ -678,7 +667,7 @@ module.exports = function createGachaHandler(deps) {
     const protocol = resolveGachaProtocol(req, body, profile);
     if (pathname === '/gacha/refresh' && protocol === 'api6') {
       const groupsRaw = parsedUrl && parsedUrl.query && parsedUrl.query.groups ? String(parsedUrl.query.groups) : 'base';
-      return sendJson(res, { result: { groups: makeGachaApiGroupsForRefresh(groupsRaw), checkHash: '' }, ts: Math.floor(Date.now() / 1000) });
+      return sendJson(res, { result: { groups: makeGachaApiGroupsForRefresh(groupsRaw), check: 'uhtotallysecure' }, ts: Math.floor(Date.now() / 1000) });
     }
     if (pathname === '/gacha/getSet') {
       if (protocol === 'api3') return handleGetSetApi3(req, res, parsedUrl);

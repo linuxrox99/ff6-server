@@ -20,7 +20,6 @@ const createStoreHandler = require('./handlers/storeHandler');
 const createInventoryHandler = require('./handlers/inventoryHandler');
 const createWebsocketHandler = require('./handlers/websocketHandler');
 const createGachaHandler = require('./handlers/gachaHandler');
-const handlePrizesRefresh = require('./handlers/prizesRefreshHandler');
 
 // toggle logging here
 const defaultConsoleLoggingEnabled  = false;
@@ -316,7 +315,7 @@ const routes = [
   { path: '/tournaments/latest', handler: (req, res) => handleJsonResponse('jsonresponses/tournamentslatest.json', res) },
   { path: '/racewars/latest',     handler: (req, res) => handleJsonResponse('jsonresponses/racewarslatest.json',  res) },
   { path: '/racewars/myInfo',     handler: (req, res) => handleJsonResponse('jsonresponses/racewarsmyinfo.json',  res) },
-  { path: '/prizes/refresh',      handler: (req, res) => handlePrizesRefresh(req, res) },
+  { path: '/prizes/refresh',      handler: (req, res) => handleJsonResponse('jsonresponses/prizesrefresh.json',   res) },
   { path: '/web/webViewTabs',     handler: (req, res) => handleJsonResponse('jsonresponses/webviewtabs.json',     res) },
   { path: '/push/token',          handler: (req, res) => handleConnection.handlePushToken(req, res) }
 ];
